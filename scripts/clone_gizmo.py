@@ -36,12 +36,12 @@ def clone_repo(repo_url, destination_dir):
     print("Cloning completed.")
     return
 
-
-if __name__ == '__main__':
-    args = docopt(__doc__)
-    dest_dir = args['--dest_dir']
-    repo = args['--repo_name']
-    repo_url = ""
+def get_repo_url(repo_name):
+    """
+    Get the URL of the repository to clone.
+    Inputs:
+        repo_name: Name of the repository to clone
+    """
     if repo == "gizmo_imf_sk" or repo=="imf" or repo=="sfire":
         repo_url = "git@bitbucket.org:shivankhullar/gizmo_imf_sk.git"
     
@@ -52,5 +52,11 @@ if __name__ == '__main__':
         print("Invalid repo name. Exiting...")
         exit(1)
 
-    print (repo, repo_url)
+    return repo_url
+
+if __name__ == '__main__':
+    args = docopt(__doc__)
+    dest_dir = args['--dest_dir']
+    repo = args['--repo_name']
+    repo_url = get_repo_url(repo)
     clone_repo(repo_url, dest_dir)
