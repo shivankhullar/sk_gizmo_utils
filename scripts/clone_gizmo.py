@@ -6,33 +6,51 @@ Usage: snapshot_timing.py [options]
 
 Options:
     -h, --help                  Show this screen
+    --repo_name=<repo_name>     Name of the repository to clone [default: gizmo_imf_sk]
+    --dest_dir=<output>         Destination directory [default: ./]
 """
 
-import numpy as np
-from git import Repo
+import subprocess
+from docopt import docopt
 
 
-def clone_repo()
+def clone_repo(repo_url, destination_dir):
+    """
+    Clone a GitHub repository using the 'git' command.
+    
+    Inputs:
+        repo_url: URL of the repository to clone
+        destination_dir: Directory where the repository will be cloned
+    """
+    repo_name = repo_url.split("/")[-1].split(".git")[0]
+
+    # Clone the repository using the 'git' command
+    clone_command = ["git", "clone", repo_url, f"{destination_dir}/{repo_name}"]
+
+    try:
+        subprocess.run(clone_command, check=True)
+        print(f"Cloned {repo_name} successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error cloning {repo_name}: {e}")
+
+    print("Cloning completed.")
+    return
+
 
 if __name__ == '__main__':
     args = docopt(__doc__)
-    snapdir = args['--snapdir']
-    output_dir = args['--output_dir']
-    start_a = float(args['--start_a'])
-    end_a = float(args['--end_a'])
-    spacing = convert_to_array(args['--spacing']) 
-    cut_off_time = float(args['--cut_off_time'])
-    key = args['--key']
-    co = get_cosomology()
+    dest_dir = args['--dest_dir']
+    repo = args['--repo_name']
+    repo_url = ""
+    if repo == "gizmo_imf_sk" or repo=="imf" or repo=="sfire":
+        repo_url = "git@bitbucket.org:shivankhullar/gizmo_imf_sk.git"
     
-    end_time = args['--end_time']
-    if end_time!='None':
-        end_time = float(end_time) + float(co.t_from_a(start_a))/Myr
-        end_a = np.round(float(co.a_from_t(end_time*Myr)), 7)
-
+    elif repo == "gizmo_public" or repo=="public":
+        repo_url = "git@bitbucket.org:phopkins/gizmo-public.git"
     
-    _ = get_scale_factors(co, start_a, end_a, spacing, cut_off_time, key=key, output=output_dir)
-    print ('Done!')
+    else:
+        print("Invalid repo name. Exiting...")
+        exit(1)
 
-
-Repo.clone_from(git_url, repo_dir)
+    print (repo, repo_url)
+    clone_repo(repo_url, dest_dir)
