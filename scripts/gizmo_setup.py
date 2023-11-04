@@ -131,6 +131,10 @@ def modify_makefile(path, systype):
         systype: System name
     """
 
+    file_name = "Makefile"
+    file_path = path+file_name
+    
+
     return
 
 
