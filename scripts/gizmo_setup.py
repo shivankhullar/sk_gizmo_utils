@@ -29,10 +29,19 @@ def modify_makefile_systype(path, systype):
         systype == "scinet_niagara" or systype =="Scinet" or systype == "scinet" or \
         systype == "Niagara" or systype == "niagara" or systype == "nia":
         systype = "Scinet_Niagara"
-    if systype == "Frontera" or systype == "frontera":
+    if systype == "Frontera" or systype == "frontera" or systype == "front":
         systype = "Frontera"
     try:
         with open(file_path, "r+") as file:
+            lines = file.readlines()
+            for line in lines:
+                if not line.strip().startswith("#"):
+                    #Check if it corresponds to the systype
+                    if systype in line:
+                        #Exit the function if the systype already exists and is uncommented
+                        print (f"System type {systype} already exists in Makefile.systype file. Leaving Makefile.systype file unchanged...")
+                        return
+
             lines = file.readlines()
             file.seek(0)
             file.truncate(0)  # Clear the file contents
@@ -64,7 +73,7 @@ def setup_cooling_tables(path):
         print(f"Error copying file {path}cooling/TREECOOL to {path}TREECOOL")
         exit(1)
     try:
-        subprocess.run(["wget", f"-P {path}", "http://www.tapir.caltech.edu/~phopkins/public/spcool_tables.tgz"], check=True)
+        subprocess.run(["wget", "-P", f"{path}", "http://www.tapir.caltech.edu/~phopkins/public/spcool_tables.tgz"], check=True)
     except:
         print(f"Error downloading file http://www.tapir.caltech.edu/~phopkins/public/spcool_tables.tgz")
         exit(1)
@@ -90,7 +99,7 @@ def copy_job_submission_scripts(path, systype):
     """
     if systype == "CITA_starq" or systype == "starq":
         try:
-            subprocess.run(["cp", f"./job_scripts/CITA_starq/*", f"{path}"], check=True)
+            subprocess.run(["cp", "./job_scripts/CITA_starq/*.sh", f"{path}"], check=True)
         except:
             print(f"Error copying job submission scripts to {path}")
             exit(1)
@@ -98,13 +107,13 @@ def copy_job_submission_scripts(path, systype):
         systype == "scinet_niagara" or systype =="Scinet" or systype == "scinet" or \
         systype == "Niagara" or systype == "niagara" or systype == "nia":
         try:
-            subprocess.run(["cp", f"{path}gizmo_perf/sk_gizmo_utils/scripts/job_submission_scripts/Scinet_Niagara/*", f"{path}"], check=True)
+            subprocess.run(["cp", "./job_scripts/Niagara/*", f"{path}"], check=True)
         except:
             print(f"Error copying job submission scripts to {path}")
             exit(1)
-    elif systype == "Frontera" or systype == "frontera":
+    elif systype == "Frontera" or systype == "frontera" or systype == "front":
         try:
-            subprocess.run(["cp", f"{path}gizmo_perf/sk_gizmo_utils/scripts/job_submission_scripts/Frontera/*", f"{path}"], check=True)
+            subprocess.run(["cp", "./job_scripts/Frontera/*", f"{path}"], check=True)
         except:
             print(f"Error copying job submission scripts to {path}")
             exit(1)
@@ -114,6 +123,17 @@ def copy_job_submission_scripts(path, systype):
 
     return
 
+def modify_makefile(path, systype):
+    """
+    Modify makefile for the system type
+    Inputs:
+        path: Path to the gizmo directory
+        systype: System name
+    """
+
+    return
+
+
 if __name__ == '__main__':
     args = docopt(__doc__)
     repo_dir = args['--repo_dir']
@@ -122,9 +142,19 @@ if __name__ == '__main__':
     systype = args['--systype']
     
     #Uncomment out the whole makefile.systype file and add the systype
+    print ('Modifying makefile.systype file...')
     modify_makefile_systype(repo_dir, systype)
-    #Copy job submissions scripts to the gizmo directory
-    copy_job_submission_scripts(repo_dir)
+    
+    #Modify makefile for the system type
+    print ('Modifying makefile file...')
+    modify_makefile(repo_dir, systype)
+    
     #Copy the TREECOOL file and download the spcool_tables
+    print ('Setting up cooling tables...')
     setup_cooling_tables(repo_dir)
+
+    #Copy job submissions and module load scripts to the gizmo directory
+    print ('Copying job submission scripts...')
+    copy_job_submission_scripts(repo_dir, systype)
+
     print("Setup completed.")
