@@ -78,7 +78,7 @@ def setup_cooling_tables(path):
         print(f"Error downloading file http://www.tapir.caltech.edu/~phopkins/public/spcool_tables.tgz")
         exit(1)
     try:
-        subprocess.run(["tar", "-xzvf", f"{path}spcool_tables.tgz", "-C", f"{path}spcool_tables"], check=True)
+        subprocess.run(["tar", "-xzvf", f"{path}spcool_tables.tgz", "-C", f"{path}"], check=True)
     except:
         print(f"Error extracting file {path}spcool_tables.tgz")
         exit(1)
@@ -99,7 +99,8 @@ def copy_job_submission_scripts(path, systype):
     """
     if systype == "CITA_starq" or systype == "starq":
         try:
-            subprocess.run(["cp", "./job_scripts/CITA_starq/*.sh", f"{path}"], check=True)
+            subprocess.Popen([f"cp ./job_scripts/CITA_starq/*.sh {path}"], shell=True, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
         except:
             print(f"Error copying job submission scripts to {path}")
             exit(1)
@@ -134,7 +135,6 @@ def modify_makefile(path, systype):
     file_name = "Makefile"
     file_path = path+file_name
     
-
     return
 
 
