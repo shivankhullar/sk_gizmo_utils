@@ -1,0 +1,37 @@
+#----------------------------------------------------------------------------------------------
+ifeq ($(SYSTYPE),"SciNet")
+CC		 = mpicc
+OPTIMIZE = -O2 -xHost -funroll-loops -no-prec-div -fast-transcendentals -fp-model fast=2 -ipo
+#OPTIMIZE += -g -Wall # Uncomment for debugging.
+ifeq (OPENMP,$(findstring OPENMP,$(CONFIGVARS)))
+	OPTIMIZE += -qopenmp -parallel   # openmp required compiler flags
+endif
+FC       =  $(CC)
+GSL_INCL =  -I${SCINET_GSL_ROOT}/include
+GSL_LIBS =  -L${SCINET_GSL_ROOT}/lib -mkl
+FFTW_INCL=  -I${SCINET_FFTW_MPI_ROOT}/include
+FFTW_LIBS=  -L${SCINET_FFTW_MPI_ROOT}/lib
+MPICHLIB =
+HDF5INCL =  -I${SCINET_HDF5_ROOT}/include -DH5_USE_16_API
+HDF5LIB  =  -L${SCINET_HDF5_ROOT}/lib -lhdf5 -lz
+MPICHLIB =
+OPT     += -DUSE_MPI_IN_PLACE -DHDF5_DISABLE_VERSION_CHECK
+ifneq (USE_FFTW3, $(findstring USE_FFTW3, $(CONFIGVARS)))
+OPT += -DUSE_FFTW3
+endif
+##
+## Notes [Fergus Horrobin]:
+## 
+## As of December 2021 it seems that the following way of loading the modules gives the best performance:
+##		module load intel intelmpi gsl hdf5 fftw
+## Experiment with OPENMP=2 or =4 especially for larger (>4 node) runs. MULTIPLEDOMAINS=16 seems to be helpful as
+## well but this may be problem specific.
+##
+## FFTW is FFTW3 on SciNet so you must enable the USE_FFTW3 compiler flag.
+##
+## Tested on planet disk interaction problem in 3D, strong and weak scaling are comparable to the ones presented in code
+## paper, tested for 16-256 nodes.
+##
+## I am currently using -O2 since -O3 seems to be slightly slower for my testing, though the results seems to be the
+## same. -O1 is slightly slower and does not seem to yield better accuracy for my testing but you should experiment.
+endif
