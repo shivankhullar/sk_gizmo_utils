@@ -13,6 +13,18 @@ Options:
 import subprocess
 from docopt import docopt
 
+def get_system_type(systype):
+    if systype == "CITA_starq" or systype == "starq":
+        systype = "CITA_starq"
+    if systype == "Scinet_Niagara" or systype == "SciNet_Niagara" or \
+        systype == "scinet_niagara" or systype =="Scinet" or systype == "scinet" or \
+        systype == "Niagara" or systype == "niagara" or systype == "nia":
+        systype = "Scinet_Niagara"
+    if systype == "Frontera" or systype == "frontera" or systype == "front":
+        systype = "Frontera"
+
+    return systype
+
 def modify_makefile_systype(path, systype):
     """
     Uncomment the whole makefile.systype file and add the systype
@@ -23,14 +35,6 @@ def modify_makefile_systype(path, systype):
 
     file_name = "Makefile.systype"
     file_path = path+file_name
-    if systype == "CITA_starq" or systype == "starq":
-        systype = "CITA_starq"
-    if systype == "Scinet_Niagara" or systype == "SciNet_Niagara" or \
-        systype == "scinet_niagara" or systype =="Scinet" or systype == "scinet" or \
-        systype == "Niagara" or systype == "niagara" or systype == "nia":
-        systype = "Scinet_Niagara"
-    if systype == "Frontera" or systype == "frontera" or systype == "front":
-        systype = "Frontera"
     try:
         with open(file_path, "r+") as file:
             lines = file.readlines()
@@ -97,24 +101,24 @@ def copy_job_submission_scripts(path, systype):
         path: Path to the gizmo directory
         systype: System type to add to the makefile.systype file
     """
-    if systype == "CITA_starq" or systype == "starq":
+    if systype == "CITA_starq":
         try:
-            subprocess.Popen([f"cp ./job_scripts/CITA_starq/*.sh {path}"], shell=True, stdout=subprocess.PIPE,
+            subprocess.Popen([f"cp ./job_scripts/CITA_starq/* {path}"], shell=True, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
         except:
             print(f"Error copying job submission scripts to {path}")
             exit(1)
-    elif systype == "Scinet_Niagara" or systype == "SciNet_Niagara" or \
-        systype == "scinet_niagara" or systype =="Scinet" or systype == "scinet" or \
-        systype == "Niagara" or systype == "niagara" or systype == "nia":
+    elif systype == "Scinet_Niagara" ":
         try:
-            subprocess.run(["cp", "./job_scripts/Niagara/*", f"{path}"], check=True)
+            subprocess.Popen([f"cp ./job_scripts/Niagara/* {path}"], shell=True, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
         except:
             print(f"Error copying job submission scripts to {path}")
             exit(1)
-    elif systype == "Frontera" or systype == "frontera" or systype == "front":
+    elif systype == "Frontera":
         try:
-            subprocess.run(["cp", "./job_scripts/Frontera/*", f"{path}"], check=True)
+            subprocess.Popen([f"cp ./job_scripts/Frontera/* {path}"], shell=True, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
         except:
             print(f"Error copying job submission scripts to {path}")
             exit(1)
@@ -144,6 +148,9 @@ if __name__ == '__main__':
     if repo_dir[-1] != "/":
         repo_dir += "/"
     systype = args['--systype']
+    
+    #Get the system type
+    systype = get_system_type(systype)
     
     #Uncomment out the whole makefile.systype file and add the systype
     print ('Modifying makefile.systype file...')
