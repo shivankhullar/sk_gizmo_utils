@@ -108,7 +108,7 @@ def copy_job_submission_scripts(path, systype):
         except:
             print(f"Error copying job submission scripts to {path}")
             exit(1)
-    elif systype == "Scinet_Niagara" ":
+    elif systype == "Scinet_Niagara":
         try:
             subprocess.Popen([f"cp ./system_setup_scripts/Niagara/* {path}"], shell=True, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
@@ -135,37 +135,45 @@ def modify_makefile(path, systype):
         path: Path to the gizmo directory
         systype: System name
     """
-
-
-
-    file_name = "Makefile"
-    file_path = path+file_name
-    
+    if systype == "CITA_starq":
     # Paths to the source and destination files
-    source_file_path = "./system_setup_scripts/CITA_starq/System_makefile.txt"
-    destination_file_path = "destination.txt"
+        source_file_path = "./system_setup_scripts/CITA_starq/System_makefile.txt"
+    if systype == "Scinet_Niagara":
+        source_file_path = "./system_setup_scripts/Niagara/System_makefile.txt"
+    if systype == "Frontera":
+        source_file_path = "./system_setup_scripts/Frontera/System_makefile.txt"
 
-    # Line number where you want to insert the contents
-    insert_line_number = 3  # Change this to the desired line number
 
-    # Read the contents from the source file
-    with open(source_file_path, "r") as source_file:
-        source_contents = source_file.readlines()
+    first_file_path = path+"Makefile"     #Path to the destination file
+    second_file_path = source_file_path   #Path to the source file
 
-    # Insert the contents into the destination file at the specified line number
-    with open(destination_file_path, "r") as destination_file:
-        destination_contents = destination_file.readlines()
+    # Line number where you want to insert the contents if they don't match
+    insert_line_number = 84  # Change this to the desired line number
 
-    destination_contents = (
-        destination_contents[:insert_line_number - 1]
-        + source_contents
-        + destination_contents[insert_line_number - 1 :]
-    )
+    # Read the contents of the second (small) file
+    with open(second_file_path, "r") as second_file:
+        second_contents = second_file.readlines()
 
-    # Write the modified contents back to the destination file
-    with open(destination_file_path, "w") as destination_file:
-        destination_file.writelines(destination_contents)
+    # Open the first (large) file in read mode
+    with open(first_file_path, "r") as first_file:
+        first_contents = first_file.readlines()
 
+    # Check if the contents of the second file are contained within the first file
+    contains_second_contents = all(line in first_contents for line in second_contents)
+
+    if not contains_second_contents:
+        # If the contents are not contained, insert them at the specified line
+        first_contents[insert_line_number - 1:insert_line_number - 1] = second_contents
+
+        # Write the modified contents back to the first (large) file
+        with open(first_file_path, "w") as first_file:
+            first_file.writelines(first_contents)
+
+        print("System specific Makefile contents inserted into the Makefile at line", insert_line_number)
+    else:
+        print("Makefile's contents are sufficient.")
+
+    print("Check and insert completed.")
     return
 
 
