@@ -103,21 +103,21 @@ def copy_job_submission_scripts(path, systype):
     """
     if systype == "CITA_starq":
         try:
-            subprocess.Popen([f"cp ./job_scripts/CITA_starq/* {path}"], shell=True, stdout=subprocess.PIPE,
+            subprocess.Popen([f"cp ./system_setup_scripts/CITA_starq/* {path}"], shell=True, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
         except:
             print(f"Error copying job submission scripts to {path}")
             exit(1)
     elif systype == "Scinet_Niagara" ":
         try:
-            subprocess.Popen([f"cp ./job_scripts/Niagara/* {path}"], shell=True, stdout=subprocess.PIPE,
+            subprocess.Popen([f"cp ./system_setup_scripts/Niagara/* {path}"], shell=True, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
         except:
             print(f"Error copying job submission scripts to {path}")
             exit(1)
     elif systype == "Frontera":
         try:
-            subprocess.Popen([f"cp ./job_scripts/Frontera/* {path}"], shell=True, stdout=subprocess.PIPE,
+            subprocess.Popen([f"cp ./system_setup_scripts/Frontera/* {path}"], shell=True, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
         except:
             print(f"Error copying job submission scripts to {path}")
@@ -136,9 +136,36 @@ def modify_makefile(path, systype):
         systype: System name
     """
 
+
+
     file_name = "Makefile"
     file_path = path+file_name
     
+    # Paths to the source and destination files
+    source_file_path = "./system_setup_scripts/CITA_starq/System_makefile.txt"
+    destination_file_path = "destination.txt"
+
+    # Line number where you want to insert the contents
+    insert_line_number = 3  # Change this to the desired line number
+
+    # Read the contents from the source file
+    with open(source_file_path, "r") as source_file:
+        source_contents = source_file.readlines()
+
+    # Insert the contents into the destination file at the specified line number
+    with open(destination_file_path, "r") as destination_file:
+        destination_contents = destination_file.readlines()
+
+    destination_contents = (
+        destination_contents[:insert_line_number - 1]
+        + source_contents
+        + destination_contents[insert_line_number - 1 :]
+    )
+
+    # Write the modified contents back to the destination file
+    with open(destination_file_path, "w") as destination_file:
+        destination_file.writelines(destination_contents)
+
     return
 
 
