@@ -32,12 +32,10 @@ class CPUHandler(FileSystemEventHandler):
         self.output_csv = output_csv
 
     def on_modified(self, event):
-        #print ('Something changed...', event.src_path)
         if "cpu.txt" in event.src_path:
             with open(event.src_path, 'r') as f:
                 lines = f.readlines()[-35:]
                 data = {}
-                print ('Lines:', lines)
                 for line in lines:
                     if "Step" in line:
                         data['Simulation Time'] = float(line.split(',')[1].split()[1])
