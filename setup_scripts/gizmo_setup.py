@@ -108,7 +108,7 @@ def copy_job_submission_scripts(path, systype):
         except:
             print(f"Error copying job submission scripts to {path}")
             exit(1)
-    elif systype == "Scinet_Niagara":
+    elif systype == "SciNet":
         try:
             subprocess.Popen([f"cp ./system_setup_scripts/Niagara/* {path}"], shell=True, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
