@@ -138,7 +138,7 @@ def modify_makefile(path, systype):
     if systype == "CITA_starq":
     # Paths to the source and destination files
         source_file_path = "./system_setup_scripts/CITA_starq/System_makefile.txt"
-    if systype == "Scinet_Niagara":
+    if systype == "SciNet":
         source_file_path = "./system_setup_scripts/Niagara/System_makefile.txt"
     if systype == "Frontera":
         source_file_path = "./system_setup_scripts/Frontera/System_makefile.txt"
