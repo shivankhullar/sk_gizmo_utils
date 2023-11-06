@@ -19,7 +19,7 @@ def get_system_type(systype):
     if systype == "Scinet_Niagara" or systype == "SciNet_Niagara" or \
         systype == "scinet_niagara" or systype =="Scinet" or systype == "scinet" or \
         systype == "Niagara" or systype == "niagara" or systype == "nia":
-        systype = "Scinet_Niagara"
+        systype = "SciNet"
     if systype == "Frontera" or systype == "frontera" or systype == "front":
         systype = "Frontera"
 
@@ -46,7 +46,7 @@ def modify_makefile_systype(path, systype):
                         print (f"System type {systype} already exists in Makefile.systype file. Leaving Makefile.systype file unchanged...")
                         return
 
-            lines = file.readlines()
+            #lines = file.readlines()
             file.seek(0)
             file.truncate(0)  # Clear the file contents
 
