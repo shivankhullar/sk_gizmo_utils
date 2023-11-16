@@ -148,7 +148,7 @@ def modify_makefile(path, systype):
     second_file_path = source_file_path   #Path to the source file
 
     # Line number where you want to insert the contents if they don't match
-    insert_line_number = 84  # Change this to the desired line number
+    insert_line_number = 1138  # Change this to the desired line number
 
     # Read the contents of the second (small) file
     with open(second_file_path, "r") as second_file:
