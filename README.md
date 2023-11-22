@@ -1,2 +1,2 @@
 # sk_gizmo_utils
-Utilities for gizmo sims
+Utilities for gizmo sims. More documentation coming soon...
