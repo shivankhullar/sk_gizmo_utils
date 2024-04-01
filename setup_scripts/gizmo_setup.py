@@ -57,7 +57,7 @@ def modify_makefile_systype(path, systype):
                 file.write(line)
             
             #Add the systype
-            file.write(f'SYSTYPE="{systype}"\n')
+            file.write(f'\nSYSTYPE="{systype}"\n')
             file.close()
 
     except:
