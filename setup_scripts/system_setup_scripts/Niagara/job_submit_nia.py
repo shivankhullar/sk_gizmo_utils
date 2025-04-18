@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 import argparse
 
-def create_sbatch_script(job_number, param_file, restart, num_nodes, job_name, dependency=None, account=1, cores_per_node=40):
+def create_sbatch_script(job_number, param_file, restart, num_nodes, job_name, dependency=None, account=1, cores_per_node=40, wall_time=23):
     """
     Generate content for an sbatch script for GIZMO simulation.
 
@@ -16,11 +16,18 @@ def create_sbatch_script(job_number, param_file, restart, num_nodes, job_name, d
         dependency: Job ID this job depends on
         account: Account number (1 for rrg-matzner, 2 for rrg-murray-ac)
         cores_per_node: Number of cores per node (default: 40)
+        wall_time: Wall time in hours (default: 23)
 
     Returns:
         String containing the sbatch script content
     """
     num_cores = num_nodes * cores_per_node
+
+    # Convert wall time to HH:MM:SS format
+    hours = int(wall_time)
+    minutes = int((wall_time - hours) * 60)
+    seconds = int(((wall_time - hours) * 60 - minutes) * 60)
+    wall_time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
     # Map account number to account name
     account_map = {
@@ -34,7 +41,7 @@ def create_sbatch_script(job_number, param_file, restart, num_nodes, job_name, d
         f"#SBATCH --account={account_name}",
         f"#SBATCH --nodes={num_nodes}",
         f"#SBATCH --ntasks-per-node={cores_per_node}",
-        "#SBATCH --time=23:00:00",
+        f"#SBATCH --time={wall_time_str}",
         f"#SBATCH --job-name={job_name}_{job_number}",
         "#SBATCH --output=mpi_output_%j.txt",
         "#SBATCH --mail-type=FAIL"
@@ -84,7 +91,7 @@ def create_sbatch_script(job_number, param_file, restart, num_nodes, job_name, d
 
     return "\n".join(script)
 
-def submit_job_chain(num_jobs, param_file, restart, num_nodes, job_name, initial_dependency=None, account=1, cores_per_node=40):
+def submit_job_chain(num_jobs, param_file, restart, num_nodes, job_name, initial_dependency=None, account=1, cores_per_node=40, wall_time=23):
     """
     Submit a chain of dependent GIZMO simulation jobs to SLURM.
 
@@ -97,6 +104,7 @@ def submit_job_chain(num_jobs, param_file, restart, num_nodes, job_name, initial
         initial_dependency: Job ID that the first job in the chain should depend on
         account: Account number (1 for rrg-matzner, 2 for rrg-murray-ac)
         cores_per_node: Number of cores per node (default: 40)
+        wall_time: Wall time in hours (default: 23)
     """
     previous_job_id = initial_dependency
 
@@ -114,7 +122,8 @@ def submit_job_chain(num_jobs, param_file, restart, num_nodes, job_name, initial
             job_name=job_name,
             dependency=previous_job_id,
             account=account,
-            cores_per_node=cores_per_node
+            cores_per_node=cores_per_node,
+            wall_time=wall_time
         )
 
         # Write script to file
@@ -158,6 +167,8 @@ if __name__ == "__main__":
                       help='Account number (1 for rrg-matzner, 2 for rrg-murray-ac) (default: 1)')
     parser.add_argument('--cores-per-node', type=int, default=40,
                       help='Number of cores per node (default: 40)')
+    parser.add_argument('--wall-time', type=float, default=23.0,
+                      help='Wall time in hours (default: 24.0)')
 
     # Parse arguments
     args = parser.parse_args()
@@ -169,6 +180,8 @@ if __name__ == "__main__":
         raise ValueError("Number of nodes must be positive")
     if args.cores_per_node < 1:
         raise ValueError("Number of cores per node must be positive")
+    if args.wall_time <= 0:
+        raise ValueError("Wall time must be positive")
     if args.account not in [1, 2]:
         raise ValueError("Account must be either 1 (rrg-matzner) or 2 (rrg-murray-ac)")
     if not args.param_file:
@@ -180,8 +193,8 @@ if __name__ == "__main__":
     if args.initial_dependency:
         submit_job_chain(args.num_jobs, args.param_file, args.restart, 
                         args.num_nodes, args.job_name, args.initial_dependency,
-                        args.account, args.cores_per_node)
+                        args.account, args.cores_per_node, args.wall_time)
     else:
         submit_job_chain(args.num_jobs, args.param_file, args.restart, 
                         args.num_nodes, args.job_name, account=args.account,
-                        cores_per_node=args.cores_per_node)
+                        cores_per_node=args.cores_per_node, wall_time=args.wall_time)
