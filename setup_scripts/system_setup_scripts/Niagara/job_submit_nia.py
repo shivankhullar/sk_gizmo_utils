@@ -3,30 +3,38 @@ import os
 from datetime import datetime
 import argparse
 
-def create_sbatch_script(job_number, param_file, restart, num_nodes, job_name, dependency=None, account="rrg-matzner"):
+def create_sbatch_script(job_number, param_file, restart, num_nodes, job_name, dependency=None, account=1, cores_per_node=40):
     """
     Generate content for an sbatch script for GIZMO simulation.
 
     Args:
         job_number: Number of the job in the sequence
         param_file: Parameter file for the GIZMO simulation
-        restart: Boolean indicating if the job should restart from a snapshot
+        restart: Integer indicating restart mode (1 or 2) or None for no flag
         num_nodes: Number of nodes requested
         job_name: Base name for the job
         dependency: Job ID this job depends on
-        account: SLURM account name (default "rrg-matzner")
+        account: Account number (1 for rrg-matzner, 2 for rrg-murray-ac)
+        cores_per_node: Number of cores per node (default: 40)
 
     Returns:
         String containing the sbatch script content
     """
-    num_cores = num_nodes * 40
+    num_cores = num_nodes * cores_per_node
+
+    # Map account number to account name
+    account_map = {
+        1: "rrg-matzner",
+        2: "rrg-murray-ac"
+    }
+    account_name = account_map.get(account, "rrg-matzner")  # Default to rrg-matzner if invalid account number
 
     script = [
         "#!/bin/bash",
-        f"#SBATCH --account={account}",
+        f"#SBATCH --account={account_name}",
         f"#SBATCH --nodes={num_nodes}",
-        "#SBATCH --ntasks-per-node=40",
-        "#SBATCH --time=24:00:00",
+        f"#SBATCH --ntasks-per-node={cores_per_node}",
+        "#SBATCH --time=23:00:00",
         f"#SBATCH --job-name={job_name}_{job_number}",
         "#SBATCH --output=mpi_output_%j.txt",
         "#SBATCH --mail-type=FAIL"
@@ -67,23 +75,28 @@ def create_sbatch_script(job_number, param_file, restart, num_nodes, job_name, d
             ""
         ])
 
-    restart_flag = 2 if restart else 1
-    script.append(f"mpirun -np {num_cores} ./GIZMO {param_file} {restart_flag} >\"$filename\"")
+    # Only include restart flag if specified
+    mpirun_cmd = f"mpirun -np {num_cores} ./GIZMO {param_file}"
+    if restart is not None:
+        mpirun_cmd += f" {restart}"
+    mpirun_cmd += " >\"$filename\""
+    script.append(mpirun_cmd)
 
     return "\n".join(script)
 
-def submit_job_chain(num_jobs, param_file, restart, num_nodes, job_name, initial_dependency=None, account="rrg-matzner"):
+def submit_job_chain(num_jobs, param_file, restart, num_nodes, job_name, initial_dependency=None, account=1, cores_per_node=40):
     """
     Submit a chain of dependent GIZMO simulation jobs to SLURM.
 
     Args:
         num_jobs: Number of jobs to submit in the chain
         param_file: Parameter file for the GIZMO simulation
-        restart: Boolean indicating if the job should restart from a snapshot
+        restart: Integer indicating restart mode (1 or 2) or None for no flag
         num_nodes: Number of nodes requested
         job_name: Base name for the job
         initial_dependency: Job ID that the first job in the chain should depend on
-        account: SLURM account name
+        account: Account number (1 for rrg-matzner, 2 for rrg-murray-ac)
+        cores_per_node: Number of cores per node (default: 40)
     """
     previous_job_id = initial_dependency
 
@@ -100,7 +113,8 @@ def submit_job_chain(num_jobs, param_file, restart, num_nodes, job_name, initial
             num_nodes=num_nodes,
             job_name=job_name,
             dependency=previous_job_id,
-            account=account
+            account=account,
+            cores_per_node=cores_per_node
         )
 
         # Write script to file
@@ -136,12 +150,14 @@ if __name__ == "__main__":
                       help='Number of nodes to request (default: 1)')
     parser.add_argument('--job-name', type=str, default='gizmo_sim',
                       help='Base name for the jobs (default: gizmo_sim)')
-    parser.add_argument('--restart', action='store_true',
-                      help='Restart from a snapshot (default: False)')
+    parser.add_argument('--restart', type=int, choices=[1, 2],
+                      help='Restart mode (1 or 2)')
     parser.add_argument('--initial-dependency', type=str,
                       help='Job ID for initial dependency (default: None)')
-    parser.add_argument('--account', type=str, default='rrg-matzner',
-                      help='SLURM account name (default: rrg-matzner)')
+    parser.add_argument('--account', type=int, default=1, choices=[1, 2],
+                      help='Account number (1 for rrg-matzner, 2 for rrg-murray-ac) (default: 1)')
+    parser.add_argument('--cores-per-node', type=int, default=40,
+                      help='Number of cores per node (default: 40)')
 
     # Parse arguments
     args = parser.parse_args()
@@ -151,6 +167,10 @@ if __name__ == "__main__":
         raise ValueError("Number of jobs must be positive")
     if args.num_nodes < 1:
         raise ValueError("Number of nodes must be positive")
+    if args.cores_per_node < 1:
+        raise ValueError("Number of cores per node must be positive")
+    if args.account not in [1, 2]:
+        raise ValueError("Account must be either 1 (rrg-matzner) or 2 (rrg-murray-ac)")
     if not args.param_file:
         raise ValueError("Parameter file must be provided")
     if not args.job_name:
@@ -160,7 +180,8 @@ if __name__ == "__main__":
     if args.initial_dependency:
         submit_job_chain(args.num_jobs, args.param_file, args.restart, 
                         args.num_nodes, args.job_name, args.initial_dependency,
-                        args.account)
+                        args.account, args.cores_per_node)
     else:
         submit_job_chain(args.num_jobs, args.param_file, args.restart, 
-                        args.num_nodes, args.job_name, account=args.account)
+                        args.num_nodes, args.job_name, account=args.account,
+                        cores_per_node=args.cores_per_node)
