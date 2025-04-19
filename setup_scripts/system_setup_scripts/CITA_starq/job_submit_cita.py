@@ -162,7 +162,7 @@ if __name__ == "__main__":
                       help='Restart mode (1 or 2)')
     parser.add_argument('--initial-dependency', type=str,
                       help='Job ID for initial dependency (default: None)')
-    parser.add_argument('--wall-time', type=float, default=3.0,
+    parser.add_argument('--wall-time', type=float, default=24.0,
                       help='Wall time in hours (default: 24.0)')
 
     # Parse arguments

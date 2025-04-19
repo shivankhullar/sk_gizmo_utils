@@ -167,7 +167,7 @@ if __name__ == "__main__":
                       help='Account number (1 for rrg-matzner, 2 for rrg-murray-ac) (default: 1)')
     parser.add_argument('--cores-per-node', type=int, default=40,
                       help='Number of cores per node (default: 40)')
-    parser.add_argument('--wall-time', type=float, default=23.0,
+    parser.add_argument('--wall-time', type=float, default=24.0,
                       help='Wall time in hours (default: 24.0)')
 
     # Parse arguments
