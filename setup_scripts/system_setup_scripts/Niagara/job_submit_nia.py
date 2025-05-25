@@ -91,7 +91,8 @@ def create_sbatch_script(job_number, param_file, restart, num_nodes, job_name, d
 
     return "\n".join(script)
 
-def submit_job_chain(num_jobs, param_file, restart, num_nodes, job_name, initial_dependency=None, account=1, cores_per_node=40, wall_time=23):
+def submit_job_chain(num_jobs, param_file, restart, num_nodes, job_name, \
+                     initial_dependency=None, account=1, cores_per_node=40, wall_time=23, new_sim=False):
     """
     Submit a chain of dependent GIZMO simulation jobs to SLURM.
 
@@ -109,6 +110,9 @@ def submit_job_chain(num_jobs, param_file, restart, num_nodes, job_name, initial
     previous_job_id = initial_dependency
 
     for job_num in range(1, num_jobs + 1):
+        # Determine whether to use restart flag for this job
+        current_restart = None if (new_sim and job_num == 1) else restart
+        
         # Create script file with timestamp to avoid overwrites
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         script_path = f"{job_name}_job_{job_num}_{timestamp}.sh"
@@ -117,7 +121,7 @@ def submit_job_chain(num_jobs, param_file, restart, num_nodes, job_name, initial
         script_content = create_sbatch_script(
             job_number=job_num,
             param_file=param_file,
-            restart=restart,
+            restart=current_restart,
             num_nodes=num_nodes,
             job_name=job_name,
             dependency=previous_job_id,
@@ -161,6 +165,8 @@ if __name__ == "__main__":
                       help='Base name for the jobs (default: gizmo_sim)')
     parser.add_argument('--restart', type=int, choices=[1, 2],
                       help='Restart mode (1 or 2)')
+    parser.add_argument('--new-sim', action='store_true',
+                      help='If set, first job will not use restart flag')
     parser.add_argument('--initial-dependency', type=str,
                       help='Job ID for initial dependency (default: None)')
     parser.add_argument('--account', type=int, default=1, choices=[1, 2],
@@ -193,8 +199,10 @@ if __name__ == "__main__":
     if args.initial_dependency:
         submit_job_chain(args.num_jobs, args.param_file, args.restart, 
                         args.num_nodes, args.job_name, args.initial_dependency,
-                        args.account, args.cores_per_node, args.wall_time)
+                        args.account, args.cores_per_node, args.wall_time,
+                        args.new_sim)
     else:
         submit_job_chain(args.num_jobs, args.param_file, args.restart, 
                         args.num_nodes, args.job_name, account=args.account,
-                        cores_per_node=args.cores_per_node, wall_time=args.wall_time)
+                        cores_per_node=args.cores_per_node, wall_time=args.wall_time,
+                        new_sim=args.new_sim)
