@@ -22,6 +22,9 @@ def get_system_type(systype):
         systype = "SciNet"
     if systype == "Frontera" or systype == "frontera" or systype == "front":
         systype = "Frontera"
+    if systype == "Popeye" or systype == "popeye" or systype == "pop"\
+        or systype == "rusty" or systype == "rust" or systype == "Rusty" or systype == "RUSTY":
+        systype = "RUSTY"
 
     return systype
 
@@ -122,6 +125,13 @@ def copy_job_submission_scripts(path, systype):
         except:
             print(f"Error copying job submission scripts to {path}")
             exit(1)
+    elif systype == "RUSTY":
+        try:
+            subprocess.Popen([f"cp ./system_setup_scripts/Rusty/* {path}"], shell=True, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        except:
+            print(f"Error copying job submission scripts to {path}")
+            exit(1)
     else:
         print(f"Error: systype {systype} not recognized")
         exit(1)
@@ -135,6 +145,34 @@ def modify_makefile(path, systype):
         path: Path to the gizmo directory
         systype: System name
     """
+    # Special handling for RUSTY system - search for RUSTY keyword and uncomment that line
+    if systype == "RUSTY":
+        makefile_path = path + "Makefile"
+        try:
+            with open(makefile_path, "r") as file:
+                lines = file.readlines()
+            
+            modified = False
+            for i, line in enumerate(lines):
+                # Check if line contains RUSTY keyword and is commented out
+                if "RUSTY" in line and line.strip().startswith("#"):
+                    # Uncomment the line by removing the leading #
+                    lines[i] = line.lstrip("#").lstrip()
+                    modified = True
+                    print(f"Uncommented RUSTY line: {lines[i].strip()}")
+            
+            if modified:
+                with open(makefile_path, "w") as file:
+                    file.writelines(lines)
+                print("RUSTY-specific lines have been uncommented in the Makefile.")
+            else:
+                print("No commented RUSTY lines found in the Makefile.")
+        except Exception as e:
+            print(f"Error modifying Makefile for RUSTY system: {e}")
+            exit(1)
+        return
+    
+    # Original logic for other system types
     if systype == "CITA_starq":
     # Paths to the source and destination files
         source_file_path = "./system_setup_scripts/CITA_starq/System_makefile.txt"
